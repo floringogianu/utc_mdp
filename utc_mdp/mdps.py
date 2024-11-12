@@ -179,20 +179,12 @@ class MDP:
             return None
 
     @staticmethod
-    def qsa_lineplot(Q):
-        fig, ax = plt.subplots(figsize=(5, 3.75), layout="constrained")
-        nX, nU = Q.shape
-        # xs = np.arange(-0.5, nX - 0.5, 1)
-        xs = np.arange(nX)
-        us = ("top", "right", "down", "left") if nU == 4 else ("right", "left")
-        for qu, u in zip(Q.t(), us, strict=True):
-            print(qu, xs)
-            ax.step(xs, qu, where="pre", label=f"Q(x, {u})")
-        ax.legend()
+    def plot_policy(mdp, π, V, ax=None):
+        if ax is None:
+            _, ax = MDP.plot_values(mdp, values=V)
+        else:
+            MDP.plot_values(mdp, values=V, ax=ax)
 
-    @staticmethod
-    def plot_policy(mdp, π, V):
-        fig, ax = MDP.plot_values(mdp, values=V)
         # action_names = [r"$\blacktriangle$", r"$\blacktriangleright$",
         # r"$\blacktriangledown$", r"$\blacktriangleleft$"]
         action_names = [
@@ -221,6 +213,18 @@ class MDP:
                     fontsize="medium",
                     color="black",
                 )
+
+    @staticmethod
+    def qsa_lineplot(Q):
+        fig, ax = plt.subplots(figsize=(5, 3.75), layout="constrained")
+        nX, nU = Q.shape
+        # xs = np.arange(-0.5, nX - 0.5, 1)
+        xs = np.arange(nX)
+        us = ("top", "right", "down", "left") if nU == 4 else ("right", "left")
+        for qu, u in zip(Q.t(), us, strict=True):
+            print(qu, xs)
+            ax.step(xs, qu, where="pre", label=f"Q(x, {u})")
+        ax.legend()
 
     def __repr__(self):
         s = "\n".join(["".join(line) for line in self.world])
