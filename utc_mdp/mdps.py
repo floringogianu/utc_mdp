@@ -245,7 +245,7 @@ class Identity:
 
 class OneHot:
     def __init__(self, mdp: MDP, *args, **kwargs) -> None:
-        self._eye = np.eye(len(mdp.S), dtype=np.float32)
+        self._eye = np.eye(mdp.nX, dtype=np.float32)
 
     def __call__(self, state):
         return self._eye[state]
@@ -256,7 +256,7 @@ class GridCoordinates:
         self.mdp = mdp
 
     def __call__(self, state):
-        return self.mdp._i2S[state]
+        return self.mdp._x2yx[state]
 
 
 class ScaledGridCoordinates:
@@ -265,11 +265,28 @@ class ScaledGridCoordinates:
 
     def __call__(self, state):
         rows, cols = self.mdp.world.shape
-        r, c = self.mdp._i2S[state]
+        r, c = self.mdp._x2yx[state]
         # _i2s is one-based indexing because of the walls so we offset
         r, c = (r - 1) / (rows - 3), (c - 1) / (cols - 3)  # (0, 1) normalization
         yx = ((r - 0.5) * 2, (c - 0.5) * 2)  # (-1, 1) normalization
         return yx, state
+
+
+class PartialObservation:
+    def __init__(self, mdp: MDP, *args, **kwargs) -> None:
+        self.mdp = mdp
+
+    def __call__(self, state):
+        rows, cols = self.mdp.world.shape
+        r, c = self.mdp._x2yx[state]
+        fov = self.mdp.world[r - 1 : r + 2, c - 1 : c + 2]
+        obs = np.zeros_like(fov, dtype=np.float32)
+        obs[fov == "x"] = 1.0
+        goals = [k for k in self.mdp.rspec.keys() if k.isupper()]
+        print(goals)
+        for i, k in enumerate(goals):
+            obs[fov == k] = i + 2
+        return obs
 
 
 PHI = {
@@ -277,6 +294,7 @@ PHI = {
     "onehot": OneHot,
     "coords": GridCoordinates,
     "scaled_coords": ScaledGridCoordinates,
+    "partial_observation": PartialObservation,
 }
 
 
@@ -301,7 +319,21 @@ class Sim:
         return self.phi(next_state), reward, done
 
     def states(self):
-        return self.mdp.S
+        return self.mdp.X
 
     def observations(self):
-        return [self.phi(s) for s in self.mdp.S]
+        return [self.phi(x) for x in self.mdp.X]
+
+
+def main():
+    from .blueprints import ROOMBA
+
+    sim = Sim(MDP(ROOMBA), phi="partial_observation")
+    print(sim.mdp)
+    print(sim.reset())
+    o, r, d = sim.step(0)
+    print(o)
+
+
+if __name__ == "__main__":
+    main()
