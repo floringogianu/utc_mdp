@@ -283,7 +283,6 @@ class PartialObservation:
         obs = np.zeros_like(fov, dtype=np.float32)
         obs[fov == "x"] = 1.0
         goals = [k for k in self.mdp.rspec.keys() if k.isupper()]
-        print(goals)
         for i, k in enumerate(goals):
             obs[fov == k] = i + 2
         return obs
