@@ -4,7 +4,7 @@ dependencies    = ["numpy", "matplotlib"]
 description     = "Add a short description here"
 name            = "utc_mdp"
 requires-python = ">= 3.10.0"
-version         = "0.1.0"
+version         = "0.1.1"
 
 [build-system]
 requires      = ["setuptools"]
